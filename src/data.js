@@ -1,41 +1,89 @@
 export default {
-  startingTiles: ["c", "m", "∆t"],
+  startingTiles: ["ν", "S", "l", "m", "g", "t", "t°", "g", "π", "2", "ρ", "λ", "V", "v"],
   fontSizes: [64, 48, 32],
   appearance: {
-    c: {
-      color: "rgb(255, 0, 0)",
+    color: {
+      l: '#7940E7',
+      t: '#5EBA6C',
+      v: '#FCD61F',
+      m: '#787593',
+      g: '#3CBC7B',
+      F: '#738079',
+      E: '#A0D924',
+      cm: '#DA9B1F',
+      "t°": '#32DF11',
+      S: '#86863F',
+      "Pᶢ": '#093A91',
+      "ρ": '#886E4E',
+      "ρg": '#595716',
+      "gl": '#EAAA91',
+      V: '#EBC025',
+      L: '#9DEDFF',
+      "λ": '#BAD48A',
+      p: '#F0F611',
+      q: '#282877',
+      I: '#278476',
+      "I²": '#57F5E4',
+      R: '#ACF7BE',
+      "I²R": '#ED2E3A',
+      "Rt": '#DE4DC0',
+      "IV": '#1550FE',
+      "Vt": '#84EC9B',
+      "v²": '#01C6A8',
+      "v²/R": '#DAFC17',
+      "r²": '#8BAFB3',
+      "π": '#FFB514',
+      "2": '#F50115',
+      "2π": '#22988C',
+      "πr": '#1099D8',
+      k: '#489916',
+      gV: '#BC2239',
     },
-    m: {
-      color: "rgb(0, 255, 0)",
-    },
-    cm: {
-      color: "rgb(0, 0, 255)",
-    },
-    "∆t": {
-      color: "rgb(0, 0, 0)"
-    },
-    Q: {
-      color: "rgb(0, 255, 255)"
+    fontColor: {
+      p: "black"
     }
   },
   combinations: {
-    c: [
-      {
-        with: "m",
-        result: "cm",
-      },
-    ],
-    m: [
-      {
-        with: "c",
-        result: "cm",
-      },
-    ],
-    "∆t": [
-      {
-        with: "cm",
-        result: "Q"
-      }
-    ]
+    "l t": "v",
+    "m g": "F",
+    "F l": "E",
+    "cm t°": "E",
+    "F S": "Pᶢ",
+    "ρ g": "ρg",
+    "g l": "gl",
+    "ρg l": "Pᶢ",
+    "ρ gl": "Pᶢ",
+    "m ρ": "V",
+    "m L": "E",
+    "m λ": "E",
+    "m v": "p", // check
+    "l l": "S",
+    "S l": "V",
+    "q t": "I",
+    "V R": "I",
+    "m M": "ν",
+    "I I": "I²",
+    "I² R": "I²R",
+    "R t": "Rt",
+    "I²R t": "E",
+    "I² Rt": "E",
+    "I V": "IV",
+    "V t": "Vt",
+    "IV t": "E",
+    "I Vt": "E",
+    "v v": "v²",
+    "v² R": "v²/R",
+    "v²/R t": "E",
+    "v² Rt": "E",
+    "r r": "r²",
+    "π r²": "S",
+    "2 π": "2π",
+    "π r": "πr",
+    "2π r": "l",
+    "2 πr": "l",
+    "g V": "gV",
+    "ρg V": "F",
+    "ρ gV": "F",
+    "k l": "F"
   },
 };

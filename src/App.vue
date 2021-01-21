@@ -1,24 +1,32 @@
 <template>
   <div id="app">
     <div class="container">
-      <canvas id="c" width="401" height="401" />
+      <canvas id="c" width="376" height="376" />
+    </div>
+    <div class="container">
+      <button @click="reset" style="margin-top: 2px">Начать заново</button>
+    </div>
+    <div class="container">
+    <p>Очки: {{ score }}</p>
+
+    <p v-if="lastCreatedTile !== null" style="margin-left: 5px">Последняя новая плитка: {{ lastCreatedTile }}</p>
     </div>
     <p>Используйте стрелки клавиатуры или кнопки ниже для управления.</p>
     <div class="container">
       <table>
         <tr>
           <td></td>
-          <td><button @click="move('up')">Вверх</button></td>
+          <td><button @click="move('up')">🡡</button></td>
           <td></td>
         </tr>
         <tr>
-          <td><button @click="move('left')">Влево</button></td>
+          <td><button @click="move('left')">🡠</button></td>
           <td></td>
-          <td><button @click="move('right')">Вправо</button></td>
+          <td><button @click="move('right')">🡢</button></td>
         </tr>
         <tr>
           <td></td>
-          <td><button @click="move('down')">Вниз</button></td>
+          <td><button @click="move('down')">🡣</button></td>
           <td></td>
         </tr>
       </table>
@@ -34,46 +42,22 @@ export default {
   data: function () {
     return {
       grid: [
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
       ],
+      knownTiles: [],
+      lastCreatedTile: null,
+      score: 0
     };
-  },
-  computed: {
-    arrayForGrid() {
-      var returnList = [];
-      returnList = returnList.concat(this.grid[0]);
-      returnList = returnList.concat(this.grid[1]);
-      returnList = returnList.concat(this.grid[2]);
-      returnList = returnList.concat(this.grid[3]);
-      for (let i in returnList) {
-        returnList[i] = {
-          key: i,
-          value: returnList[i],
-        };
-      }
-      return returnList;
-    },
-
-    valueGrid(grid) {
-      var valueGrid;
-      for (let row in grid) {
-        var currentRow = [];
-        for (let cell in row) {
-          currentRow.push(cell.value);
-        }
-        valueGrid.push(currentRow);
-      }
-      return valueGrid;
-    },
   },
   beforeMount() {
     var grid = [];
-    for (let x = 0; x < 4; x++) {
+    for (let x = 0; x < 5; x++) {
       var row = [];
-      for (let y = 0; y < 4; y++) {
+      for (let y = 0; y < 5; y++) {
         row.push("");
       }
       grid.push(row);
@@ -128,25 +112,30 @@ export default {
           return false;
         }
       });
-      var zeroes = Array(4 - arr.length).fill("");
+      var zeroes = Array(5 - arr.length).fill("");
       arr = zeroes.concat(arr);
       return arr;
     },
 
     combineRow(row) {
       var arr = row;
-      for (let i = 3; i >= 1; i--) {
+      for (let i = 4; i >= 1; i--) {
         let a = arr[i];
         let b = arr[i - 1];
-        let possibleWith;
-        if (data.combinations[a] !== undefined) {
-          possibleWith = data.combinations[a].find((val) => {
-            if (val.with == b) return true;
-            else return false;
-          });
+        // let possibleWith;
+        let result;
+        if ({}.hasOwnProperty.call(data.combinations, `${a} ${b}`)) {
+          result = data.combinations[`${a} ${b}`];
+          if (!this.knownTiles.includes(result)) {
+            this.knownTiles.push(result);
+            this.lastCreatedTile = result;
+            this.score++;
+          }
+        } else if ({}.hasOwnProperty.call(data.combinations, `${b} ${a}`)) {
+          result = data.combinations[`${b} ${a}`];
         }
-        if (possibleWith !== undefined) {
-          arr[i] = possibleWith.result;
+        if (result !== undefined) {
+          arr[i] = result;
           arr[i - 1] = "";
         }
       }
@@ -163,10 +152,11 @@ export default {
 
     copyGrid(grid) {
       let extra = [
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
       ];
       for (let i in grid) {
         for (let j in grid) {
@@ -195,10 +185,11 @@ export default {
 
     rotateGrid(grid) {
       let newGrid = [
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
-        ["", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
       ];
       for (let i in grid) {
         for (let j in grid) {
@@ -212,36 +203,29 @@ export default {
       var context = this;
       var canv = document.querySelector("#c");
       var c = canv.getContext("2d");
-      const rectW = 100;
-      const rectH = 100;
+      const rectW = 75;
+      const rectH = 75;
       const grid = context.$data.grid;
       c.clearRect(0, 0, canv.width, canv.height);
       for (let i in grid) {
         for (let j in grid) {
-          c.strokeRect(j * rectW + 5, i * rectH + 5, 95, 95);
+          c.strokeRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
           if (grid[i][j] != "") {
-            var appearanceData = data.appearance[grid[i][j]];
+            var bgColor = data.appearance.color[grid[i][j]];
+            var fontColor = data.appearance.fontColor[grid[i][j]];
             var fontSize = data.fontSizes[grid[i][j].length - 1];
-            var fontSizeFromAppearance = appearanceData.fontSize;
             // Background color
-            if (appearanceData) {
-              c.fillStyle = appearanceData.color ? appearanceData.color : "black";
-              if (fontSizeFromAppearance !== undefined) {
-                c.font = fontSizeFromAppearance + "px sans";
-              } else if (fontSize !== undefined) {
-                c.font = fontSize + "px sans";
+            if (fontSize !== undefined) {
+                c.font = fontSize + "px italic";
               } else {
-                c.font = "64px sans";
+                c.font = "64px italic";
               }
-              // c.font = fontSizeFromAppearance != undefined ? fontSizeFromAppearance + "px sans" : fontSize != undefined ? fontSize : "64px sans";
-            } else {
-              c.fillStyle = "black";
-              c.font = "64px sans";
-            }
-            c.fillRect(j * rectW + 5, i * rectH + 5, 95, 95);
+
+            c.fillStyle = bgColor !== undefined ? bgColor : "black";
+            c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
             // Font color
-            if (appearanceData) {
-              c.fillStyle = appearanceData.fontColor ? appearanceData.fontColor : "white";
+            if (fontColor !== undefined) {
+              c.fillStyle = fontColor;
             } else {
               c.fillStyle = "white";
             }
@@ -259,13 +243,21 @@ export default {
 
     isGameOver() {
       let grid = this.grid;
-      for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
           if (grid[i][j] == "") {
             return false;
           }
 
-          if (i !== 3 && grid[i][j] === grid[i + 1][j]) {
+          /* if (i !== 3 && grid[i][j] === grid[i + 1][j]) {
+            return false;
+          }
+
+          if (j !== 3 && grid[i][j] === grid[i][j + 1]) {
+            return false;
+          } */
+
+          if (i !== 3 && data.combinations[`${grid[i][j]} ${grid[i + 1][j]}`]) {
             return false;
           }
 
@@ -326,9 +318,25 @@ export default {
 
       this.updateCanvas();
 
-      let gameOver = this.isGameOver();
-      if (gameOver) console.log("GAME OVER");
+      // let gameOver = this.isGameOver();
+      // if (gameOver) console.log("GAME OVER");
     },
+
+    reset() {
+      this.grid = [
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+      ];
+      this.lastCreatedTile = null;
+      this.knownTiles = [];
+      this.score = 0;
+      this.putRandomNumber();
+      this.putRandomNumber();
+      this.updateCanvas();
+    }
   },
 
   mounted() {
@@ -338,6 +346,10 @@ export default {
 </script>
 
 <style>
+p {
+  margin: 5px 0;
+}
+
 div.grid {
   display: grid;
   grid-template-columns: 100px 100px 100px 100px;
@@ -368,7 +380,7 @@ div.value p {
 }
 
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Avenir, Helvetica, Arial, sans-serif-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -387,5 +399,6 @@ div.container {
 table button {
   width: 75px;
   height: 75px;
+  font-size: 50px;
 }
 </style>
