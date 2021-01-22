@@ -1,32 +1,52 @@
 <template>
   <div id="app">
     <div class="container">
+      <p>Очки: {{ score }}</p>
+
+      <p v-if="lastCreatedTile !== null" style="margin-left: 5px">
+        Последняя новая плитка: {{ lastCreatedTile }}
+      </p>
+    </div>
+    <div class="container">
       <canvas id="c" width="376" height="376" />
+    </div>
+    <div class="rules" v-if="!rulesRead">
+      <div class="container">
+        <p>
+          Правила игры:<br />
+          Существует поле 5х5, на котором появляются плитки с величинами.
+          <br />
+          Соединяя эти плитки, можно получить новую плитку, которая является
+          новой величиной или её частью. <br />
+          При нажатии стрелок на клавиатуре или кнопок управления ниже, <br />
+          происходит сдвиг всех плиток в выбранную сторону и все возможные
+          соединения выполняются. <br />
+          После каждого сдвига появляется новая случайная величина. <br />
+          Если создать новую величину, которой не было, то добавится одно очко.
+        </p>
+
+        <button style="padding: 5px" @click="rulesRead = true">Начать игру</button>
+      </div>
     </div>
     <div class="container">
       <button @click="reset" style="margin-top: 2px">Начать заново</button>
     </div>
-    <div class="container">
-    <p>Очки: {{ score }}</p>
-
-    <p v-if="lastCreatedTile !== null" style="margin-left: 5px">Последняя новая плитка: {{ lastCreatedTile }}</p>
-    </div>
-    <p>Используйте стрелки клавиатуры или кнопки ниже для управления.</p>
+    <!-- <p>Используйте стрелки клавиатуры или кнопки ниже для управления.</p> -->
     <div class="container">
       <table>
         <tr>
           <td></td>
-          <td><button @click="move('up')">🡡</button></td>
+          <td><button @click="move('up')">▲</button></td>
           <td></td>
         </tr>
         <tr>
-          <td><button @click="move('left')">🡠</button></td>
+          <td><button @click="move('left')">◀</button></td>
           <td></td>
-          <td><button @click="move('right')">🡢</button></td>
+          <td><button @click="move('right')">▶</button></td>
         </tr>
         <tr>
           <td></td>
-          <td><button @click="move('down')">🡣</button></td>
+          <td><button @click="move('down')">▼</button></td>
           <td></td>
         </tr>
       </table>
@@ -50,7 +70,8 @@ export default {
       ],
       knownTiles: [],
       lastCreatedTile: null,
-      score: 0
+      score: 0,
+      rulesRead: false,
     };
   },
   beforeMount() {
@@ -63,6 +84,7 @@ export default {
       grid.push(row);
     }
     this.grid = grid;
+    this.knownTiles = data.startingTiles;
     this.putRandomNumber();
     this.putRandomNumber();
 
@@ -99,7 +121,10 @@ export default {
       }
 
       var index = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
-      var number = data.startingTiles[Math.floor(Math.random() * data.startingTiles.length)];
+      var number =
+        this.knownTiles[
+          Math.floor(Math.random() * this.knownTiles.length)
+        ];
       arr[index[0]][index[1]] = number;
       this.grid = arr;
     },
@@ -122,21 +147,20 @@ export default {
       for (let i = 4; i >= 1; i--) {
         let a = arr[i];
         let b = arr[i - 1];
-        // let possibleWith;
         let result;
         if ({}.hasOwnProperty.call(data.combinations, `${a} ${b}`)) {
           result = data.combinations[`${a} ${b}`];
-          if (!this.knownTiles.includes(result)) {
-            this.knownTiles.push(result);
-            this.lastCreatedTile = result;
-            this.score++;
-          }
         } else if ({}.hasOwnProperty.call(data.combinations, `${b} ${a}`)) {
           result = data.combinations[`${b} ${a}`];
         }
         if (result !== undefined) {
           arr[i] = result;
           arr[i - 1] = "";
+          if (!this.knownTiles.includes(result)) {
+            this.knownTiles.push(result);
+            this.lastCreatedTile = result;
+            this.score++;
+          }
         }
       }
       return arr;
@@ -216,10 +240,10 @@ export default {
             var fontSize = data.fontSizes[grid[i][j].length - 1];
             // Background color
             if (fontSize !== undefined) {
-                c.font = fontSize + "px italic";
-              } else {
-                c.font = "64px italic";
-              }
+              c.font = fontSize + "px italic";
+            } else {
+              c.font = "64px italic";
+            }
 
             c.fillStyle = bgColor !== undefined ? bgColor : "black";
             c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
@@ -306,9 +330,7 @@ export default {
 
       if (flipped) this.grid = this.flipGrid(this.grid);
       if (rotated) {
-        // for (let i = 0; i < 3; i++) {
         this.grid = this.rotateGrid(this.grid);
-        // }
         rotated = false;
       }
 
@@ -331,12 +353,12 @@ export default {
         ["", "", "", "", ""],
       ];
       this.lastCreatedTile = null;
-      this.knownTiles = [];
+      this.knownTiles = data.startingTiles;
       this.score = 0;
       this.putRandomNumber();
       this.putRandomNumber();
       this.updateCanvas();
-    }
+    },
   },
 
   mounted() {
@@ -346,6 +368,24 @@ export default {
 </script>
 
 <style>
+body {
+  margin: 0;
+}
+
+div.rules {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.75);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+div.rules .container {
+  display: block;
+}
+
 p {
   margin: 5px 0;
 }
@@ -388,6 +428,9 @@ div.value p {
   display: flex;
   flex-direction: column;
   justify-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
 }
 
 div.container {
