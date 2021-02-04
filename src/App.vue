@@ -56,6 +56,7 @@
 
 <script>
 import data from "./data";
+import images from './images'
 
 export default {
   name: "App",
@@ -234,7 +235,7 @@ export default {
       for (let i in grid) {
         for (let j in grid) {
           c.strokeRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
-          if (grid[i][j] != "") {
+          if (grid[i][j] != "" && grid[i][j].search("img") === -1) {
             var bgColor = data.appearance.color[grid[i][j]];
             var fontColor = data.appearance.fontColor[grid[i][j]];
             var fontSize = data.fontSizes[grid[i][j].length - 1];
@@ -260,6 +261,15 @@ export default {
               j * rectW + rectW / 2 + 2.5,
               i * rectH + rectH / 2 + 2.5
             );
+          } else if (grid[i][j].search("img") !== -1) {
+            var args = grid[i][j].split(" ");
+            var image = new Image();
+            image.src = images[args[1]];
+            c.drawImage(
+              image,
+              j * rectW + 2.5,
+              i * rectH + 2.5
+            )
           }
         }
       }
