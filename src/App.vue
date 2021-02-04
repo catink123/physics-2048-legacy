@@ -194,10 +194,10 @@ export default {
     compareGrid(firstGrid, secondGrid) {
       for (let i in firstGrid) {
         for (let j in firstGrid) {
-          if (firstGrid[i][j] == secondGrid[i][j]) return false;
-          else return true;
+          if (firstGrid[i][j] !== secondGrid[i][j]) return false;
         }
       }
+      return true;
     },
 
     flipGrid(grid) {
@@ -344,7 +344,7 @@ export default {
         rotated = false;
       }
 
-      if (this.compareGrid(pastGrid, this.grid)) {
+      if (!this.compareGrid(pastGrid, this.grid)) {
         this.putRandomNumber();
       }
 
@@ -453,5 +453,10 @@ table button {
   width: 75px;
   height: 75px;
   font-size: 50px;
+  border: 1px solid black;
+  outline: none;
+  border-radius: 10px;
+  background: rgb(220, 220, 220);
+  color: rgb(50, 50, 50)
 }
 </style>
