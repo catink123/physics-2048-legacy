@@ -8,21 +8,20 @@
       </p>
     </div>
     <div class="container">
+      <!-- <canvas id="imageLayer" width="376" height="376" /> -->
       <canvas id="c" width="376" height="376" />
     </div>
     <div class="rules" v-if="!rulesRead">
       <div class="container">
         <p>
           Правила игры:<br />
-          Существует поле 5х5, на котором появляются плитки с величинами.
-          <br />
+          Существует поле 5х5, на котором появляются плитки с величинами, выглядящие по-разному (величина, обозначение, предмет, ассоцииоранный с этой величиной). <br />
           Соединяя эти плитки, можно получить новую плитку, которая является
           новой величиной или её частью. <br />
-          При нажатии стрелок на клавиатуре или кнопок управления ниже, <br />
+          При нажатии стрелок на клавиатуре или кнопок управления на экране, <br />
           происходит сдвиг всех плиток в выбранную сторону и все возможные
           соединения выполняются. <br />
-          После каждого сдвига появляется новая случайная величина. <br />
-          Если создать новую величину, которой не было, то добавится одно очко.
+          После каждого сдвига появляется новая случайная величина, которая будет подсвечена красным. <br />
         </p>
 
         <button style="padding: 5px" @click="rulesRead = true">
@@ -65,30 +64,20 @@ export default {
   name: "App",
   data: function () {
     return {
-      grid: [
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-      ],
+      grid: [],
       knownTiles: [],
       lastCreatedTile: null,
       score: 0,
       rulesRead: false,
+      ctx: null
     };
   },
   beforeMount() {
-    var tile = new Tile("m", "кг");
-    console.log(tile);
-
     var grid = [];
     for (let x = 0; x < 5; x++) {
       var row = [];
-      for (let y = 0; y < 5; y++) {
-        // row.push("");
+      for (let y = 0; y < 5; y++) { 
         row.push(new Tile("", ""));
-        // row.push(new Tile("", ""))
       }
       grid.push(row);
     }
@@ -123,7 +112,6 @@ export default {
       for (let x = 0; x < 5; x++) {
         var row = [];
         for (let y = 0; y < 5; y++) {
-          // row.push("");
           row.push(new Tile("", ""));
         }
         grid.push(row);
@@ -143,7 +131,7 @@ export default {
       }
       var index = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
       var number = this.knownTiles[
-        Math.floor(Math.random() * this.knownTiles.length)
+        Math.random() * 1 > 0.9 ? 1 : 0
       ];
       arr[index[0]][index[1]].value = number;
       arr[index[0]][index[1]].isNewTile = true;
@@ -164,7 +152,6 @@ export default {
           return false;
         }
       });
-      // var zeroes = Array(5 - arr.length).fill(new Tile("", ""));
       var zeroes = [];
       for (var i = 0; i < (5 - arr.length); i++) {
         zeroes[i] = new Tile("", "");
@@ -185,15 +172,18 @@ export default {
           result = data.combinations[`${b} ${a}`];
         }
         if (result !== undefined) {
+          var appearance = data.appearance.display[result];
           arr[i].value = result;
-          arr[i].display = result;
+          if (appearance !== undefined) arr[i].display = appearance[Math.floor(Math.random() * appearance.length)];
+          else arr[i].display = result;
           arr[i - 1].value = "";
           arr[i - 1].display = "";
           if (!this.knownTiles.includes(result)) {
             this.knownTiles.push(result);
             this.lastCreatedTile = result;
-            this.score++;
           }
+          var scoreEarned = Math.pow(2, this.knownTiles.findIndex(val => val === result) + 1);
+          this.score += scoreEarned;
         }
       }
       return arr;
@@ -239,11 +229,9 @@ export default {
       for (let i in grid) {
         for (let j in grid) {
           if (direction === 1) {
-            // newGrid[i][j].changeValue(grid[j][i].value, grid[j][i].display);
             newGrid[i][j].value = grid[j][i].value;
             newGrid[i][j].display = grid[j][i].display;
           } else if (direction === -1) {
-            // newGrid[j][i].changeValue(grid[i][j].value, grid[i][j].display);
             newGrid[j][i].value = grid[i][j].value;
             newGrid[j][i].display = grid[i][j].display;
           }
@@ -256,6 +244,7 @@ export default {
       var context = this;
       var canv = document.querySelector("#c");
       var c = canv.getContext("2d");
+      this.ctx = c;
       c.filter = "";
       const rectW = 75;
       const rectH = 75;
@@ -266,7 +255,6 @@ export default {
           if (grid[i][j].isNewTile === true) {
             c.strokeStyle = "red";
             c.lineWidth = 6;
-            // c.filter = "blur(3px)";
           }
           else {
             c.strokeStyle = "black";
@@ -277,13 +265,13 @@ export default {
           c.filter = "";
           grid[i][j].isNewTile = false;
           let bgColor;
+          var fontColor = data.appearance.fontColor[grid[i][j].value];
           if (
             grid[i][j].value != "" &&
             grid[i][j].display.search("img") === -1
           ) {
             bgColor = data.appearance.color[grid[i][j].value];
-            var fontColor = data.appearance.fontColor[grid[i][j].value];
-            var fontSize = data.fontSizes[grid[i][j].value.length - 1];
+            var fontSize = data.fontSizes[grid[i][j].display.length - 1];
             // Background color
             if (fontSize !== undefined) {
               c.font = fontSize + "px italic";
@@ -309,14 +297,19 @@ export default {
           } else if (grid[i][j].display.search("img") !== -1) {
             bgColor = data.appearance.color[grid[i][j].value];
             c.fillStyle = bgColor !== undefined ? bgColor : "black";
-            c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
+            c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5); 
             var args = grid[i][j].display.split(" ");
             var image = new Image();
+            image.onload = function() {
+              if (data.appearance.fontColor[grid[i][j].value] !== "black") c.filter = "invert(1)";
+              c.drawImage(this, j * rectW + 5, i * rectH + 5);
+              c.filter = "invert(0)";
+            };
             image.src = images[args[1]];
-            c.drawImage(image, j * rectW + 5, i * rectH + 5);
           }
         }
       }
+      // requestAnimationFrame(this.updateCanvas)
     },
 
     isGameOver() {
@@ -422,7 +415,7 @@ body {
 
 div.rules {
   position: absolute;
-  background: rgba(255, 255, 255, 0.75);
+  background: white;
   width: 100%;
   height: 100%;
   display: flex;
