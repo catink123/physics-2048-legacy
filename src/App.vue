@@ -10,6 +10,10 @@
     <div class="container">
       <!-- <canvas id="imageLayer" width="376" height="376" /> -->
       <canvas id="c" width="305" height="305" />
+      
+      <div class="container gameOver" v-if="gameOver">
+        <p>Игра окончена!</p>
+      </div>
     </div>
     <div class="rules" v-if="!rulesRead">
       <div class="container">
@@ -22,6 +26,7 @@
           происходит сдвиг всех плиток в выбранную сторону и все возможные
           соединения выполняются. <br />
           После каждого сдвига появляется новая случайная величина, которая будет подсвечена красным. <br />
+          Существует возможность откатить на одну позицию назад кнопкой "Отменить ход". <br />
         </p>
 
         <button style="padding: 5px" @click="rulesRead = true">
@@ -30,7 +35,8 @@
       </div>
     </div>
     <div class="container">
-      <button @click="reset" style="margin-top: 2px">Начать заново</button>
+      <button @click="reset">Начать заново</button>
+      <button @click="undo" :disabled="undoUsed">Отменить ход</button>
     </div>
     <!-- <p>Используйте стрелки клавиатуры или кнопки ниже для управления.</p> -->
     <div class="container">
@@ -65,6 +71,8 @@ export default {
   data: function () {
     return {
       grid: [],
+      previousGrid: [],
+      undoUsed: true,
       knownTiles: [],
       lastCreatedTile: null,
       score: 0,
@@ -109,6 +117,11 @@ export default {
           break;
       }
     });
+  },
+  computed: {
+    gameOver() {
+      return this.isGameOver();
+    }
   },
   methods: {
     newGrid() {
@@ -184,7 +197,7 @@ export default {
           arr[i - 1].display = "";
           if (!this.knownTiles.includes(result)) {
             this.knownTiles.push(result);
-            this.lastCreatedTile = result;
+            this.lastCreatedTile = data.appearance.display[result][0];
           }
           var scoreEarned = Math.pow(2, this.knownTiles.findIndex(val => val === result) + 1);
           this.score += scoreEarned;
@@ -313,6 +326,18 @@ export default {
           }
         }
       }
+      /* if (this.isGameOver()) {
+        c.fillStyle = "rgba(255, 255, 255, 0.75)";
+        c.fillRect(0, 0, canv.width, canv.height)
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillStyle = "black";
+        c.fillText(
+          "Игра окончена!",
+          canv.width / 2,
+          canv.height / 2
+        );
+      } */
       // requestAnimationFrame(this.updateCanvas)
     },
 
@@ -320,25 +345,25 @@ export default {
       let grid = this.grid;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if (grid[i][j] == "") {
+          if (grid[i][j].value == "") {
             return false;
           }
 
-          /* if (i !== 3 && grid[i][j] === grid[i + 1][j]) {
+          if (i !== 3 && grid[i][j].value === grid[i + 1][j].value) {
+            return false;
+          }
+
+          if (j !== 3 && grid[i][j].value === grid[i][j + 1].value) {
+            return false;
+          }
+
+          /* if (i !== 3 && data.combinations[`${grid[i][j]} ${grid[i + 1][j]}`]) {
             return false;
           }
 
           if (j !== 3 && grid[i][j] === grid[i][j + 1]) {
             return false;
           } */
-
-          if (i !== 3 && data.combinations[`${grid[i][j]} ${grid[i + 1][j]}`]) {
-            return false;
-          }
-
-          if (j !== 3 && grid[i][j] === grid[i][j + 1]) {
-            return false;
-          }
         }
       }
       return true;
@@ -387,12 +412,14 @@ export default {
 
       if (!this.compareGrid(pastGrid, this.grid)) {
         this.putRandomNumber();
+        this.previousGrid = pastGrid;
+        this.undoUsed = false;
       }
 
       this.updateCanvas();
 
-      // let gameOver = this.isGameOver();
-      // if (gameOver) console.log("GAME OVER");
+      let gameOver = this.isGameOver();
+      if (gameOver) console.log("GAME OVER");
     },
 
     reset() {
@@ -404,6 +431,13 @@ export default {
       this.putRandomNumber();
       this.updateCanvas();
     },
+
+    undo() {
+      this.grid = this.previousGrid;
+      this.previousGrid = [];
+      this.updateCanvas();
+      this.undoUsed = true;
+    }
   },
 
   mounted() {
@@ -482,6 +516,14 @@ div.container {
   display: flex;
   flex-direction: row;
   justify-content: center;
+}
+
+div.container.gameOver {
+  width: 305px;
+  height: 305px;
+  position: absolute;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 table button {
