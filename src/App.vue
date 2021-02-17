@@ -9,7 +9,7 @@
     </div>
     <div class="container">
       <!-- <canvas id="imageLayer" width="376" height="376" /> -->
-      <canvas id="c" width="376" height="376" />
+      <canvas id="c" width="305" height="305" />
     </div>
     <div class="rules" v-if="!rulesRead">
       <div class="container">
@@ -74,9 +74,9 @@ export default {
   },
   beforeMount() {
     var grid = [];
-    for (let x = 0; x < 5; x++) {
+    for (let x = 0; x < 4; x++) {
       var row = [];
-      for (let y = 0; y < 5; y++) { 
+      for (let y = 0; y < 4; y++) { 
         row.push(new Tile("", ""));
       }
       grid.push(row);
@@ -89,15 +89,19 @@ export default {
     document.addEventListener("keydown", (e) => {
       switch (e.key) {
         case "ArrowLeft":
+          e.preventDefault();
           this.move("left");
           break;
         case "ArrowUp":
+          e.preventDefault();
           this.move("up");
           break;
         case "ArrowRight":
+          e.preventDefault();
           this.move("right");
           break;
         case "ArrowDown":
+          e.preventDefault();
           this.move("down");
           break;
 
@@ -109,9 +113,9 @@ export default {
   methods: {
     newGrid() {
       var grid = [];
-      for (let x = 0; x < 5; x++) {
+      for (let x = 0; x < 4; x++) {
         var row = [];
-        for (let y = 0; y < 5; y++) {
+        for (let y = 0; y < 4; y++) {
           row.push(new Tile("", ""));
         }
         grid.push(row);
@@ -153,7 +157,7 @@ export default {
         }
       });
       var zeroes = [];
-      for (var i = 0; i < (5 - arr.length); i++) {
+      for (var i = 0; i < (4 - arr.length); i++) {
         zeroes[i] = new Tile("", "");
       }
       arr = zeroes.concat(arr);
@@ -162,7 +166,7 @@ export default {
 
     combineRow(row) {
       var arr = row;
-      for (let i = 4; i >= 1; i--) {
+      for (let i = 3; i >= 1; i--) {
         let a = arr[i].value;
         let b = arr[i - 1].value;
         let result;
@@ -314,8 +318,8 @@ export default {
 
     isGameOver() {
       let grid = this.grid;
-      for (let i = 0; i < 5; i++) {
-        for (let j = 0; j < 5; j++) {
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
           if (grid[i][j] == "") {
             return false;
           }
