@@ -1,8 +1,12 @@
 export default {
   default: {
-    name: 'Обычная'
+    name: 'Обычная',
+    gridColors: {}
   },
   night: {
-    name: 'Ночная'
+    name: 'Ночная',
+    gridColors: {
+      tileBorder: "white"
+    }
   }
 }

@@ -32,7 +32,7 @@ export default {
       "t": ["t", "сек.", "img clock"],
       "m": ["m", "кг", "img scale"],
       "V": ["V", "м³", "img cube"],
-      "qZar": ["q", "Кл."],
+      "qZar": ["ρ", "кг/м³", "img plotnost"],
       "p": ["p", "Па.", "img press"],
       "g": ["g", "м/с²", "img uskorenie"],
       "F": ["F", "Н.", "img dynamometer"],
@@ -41,7 +41,7 @@ export default {
       "R": ["R", "Ом.", "img resistance"],
       "U": ["U", "В.", "img voltmeter"],
       "I": ["I", "А.", "img amperemeter"],
-      "q": ["ρ", "кг/м³", "img plotnost"],
+      "q": ["q", "Кл."],
       "n": ["η", "%"]
     }
   },

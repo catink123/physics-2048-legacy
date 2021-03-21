@@ -369,27 +369,46 @@ export default {
       const rectH = 75;
       const grid = context.$data.grid;
       c.clearRect(0, 0, canv.width, canv.height);
+      let theme = themes[this.currentTheme].gridColors;
+
       for (let i in grid) {
         for (let j in grid) {
+          // Border
           if (grid[i][j].isNewTile === true) {
-            c.strokeStyle = "red";
+            if (theme.newTile !== undefined) c.strokeStyle = theme.newTile;
+            else c.strokeStyle = "red";
             c.lineWidth = 6;
           } else {
-            c.strokeStyle = "black";
+            if (theme.tileBorder !== undefined)
+              c.strokeStyle = theme.tileBorder;
+            else c.strokeStyle = "black";
             c.lineWidth = 2;
             c.filter = "";
           }
           c.strokeRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
           c.filter = "";
           grid[i][j].isNewTile = false;
+
+          // Fill and text/image
+          let tileTheme;
           let bgColor;
-          var fontColor = data.appearance.fontColor[grid[i][j].value];
+          let fontColor;
+          if (theme.tiles !== undefined && theme.tiles[grid[i][j].value] !== undefined) {
+            tileTheme = theme.tiles[grid[i][j].value];
+            if (tileTheme.font !== undefined) fontColor = tileTheme.font;
+            else fontColor = data.appearance.fontColor[grid[i][j].value];
+            if (tileTheme.bg !== undefined) bgColor = tileTheme.bg;
+            else bgColor = data.appearance.color[grid[i][j].value];
+          } else {
+            fontColor = data.appearance.fontColor[grid[i][j].value];
+            bgColor = data.appearance.color[grid[i][j].value];
+          }
+
           if (
             grid[i][j].value != "" &&
             grid[i][j].display.search("img") === -1
           ) {
-            bgColor = data.appearance.color[grid[i][j].value];
-            var fontSize = data.fontSizes[grid[i][j].display.length - 1];
+            let fontSize = data.fontSizes[grid[i][j].display.length - 1];
             // Background color
             if (fontSize !== undefined) {
               c.font = fontSize + "px italic";
@@ -413,7 +432,6 @@ export default {
               i * rectH + rectH / 2 + 2.5
             );
           } else if (grid[i][j].display.search("img") !== -1) {
-            bgColor = data.appearance.color[grid[i][j].value];
             c.fillStyle = bgColor !== undefined ? bgColor : "black";
             c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
             var args = grid[i][j].display.split(" ");
@@ -543,12 +561,18 @@ export default {
 
     onThemeChanged(e) {
       this.currentTheme = e.target.value;
+      localStorage.setItem("theme", e.target.value);
+      this.updateCanvas();
     },
   },
 
   mounted() {
     this.updateCanvas();
   },
+
+  created() {
+    this.currentTheme = localStorage.getItem("theme");
+  }
 };
 </script>
 
@@ -649,7 +673,8 @@ div.container.gameOver {
   background: rgba(255, 255, 255, 0.95);
 }
 
-button, select {
+button,
+select {
   padding: 5px;
   margin: 2.5px;
   border: 1px solid black;
