@@ -1,0 +1,15 @@
+button.theme-night, select.theme-night {
+  background: rgb(50, 50, 50);
+  color: rgb(220, 220, 220);
+  border-color: white;
+}
+
+button.theme-night:active, select.theme-night:active {
+  background: rgb(200, 200, 200);
+  color: rgb(50, 50, 50);
+}
+
+div.menu.theme-night, #app.theme-night {
+  background: rgb(25, 25, 25);
+  color: white;
+}

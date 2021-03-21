@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div :class="'theme-' + currentTheme" id="app">
     <div class="container">
       <p>Очки: {{ score }}</p>
 
@@ -8,52 +8,127 @@
       </p>
     </div>
     <div class="container">
-      <!-- <canvas id="imageLayer" width="376" height="376" /> -->
       <canvas id="c" width="305" height="305" />
-      
-      <div class="container gameOver" v-if="gameOver">
-        <p>Игра окончена!</p>
-      </div>
-    </div>
-    <div class="rules" v-if="!rulesRead">
-      <div class="container">
-        <p>
-          Правила игры:<br />
-          Существует поле 5х5, на котором появляются плитки с величинами, выглядящие по-разному (величина, обозначение, предмет, ассоцииоранный с этой величиной). <br />
-          Соединяя эти плитки, можно получить новую плитку, которая является
-          новой величиной или её частью. <br />
-          При нажатии стрелок на клавиатуре или кнопок управления на экране, <br />
-          происходит сдвиг всех плиток в выбранную сторону и все возможные
-          соединения выполняются. <br />
-          После каждого сдвига появляется новая случайная величина, которая будет подсвечена красным. <br />
-          Существует возможность откатить на одну позицию назад кнопкой "Отменить ход". <br />
-        </p>
 
-        <button style="padding: 5px" @click="rulesRead = true">
-          Начать игру
+      <transition name="fade">
+        <div class="container gameOver" v-if="gameOver">
+          <p>Игра окончена!</p>
+        </div>
+      </transition>
+    </div>
+    <transition name="fade">
+      <div class="menu" :class="'theme-' + currentTheme" v-if="!menuClosed">
+        <p style="font-size: 48px">Физический 2048</p>
+
+        <button :class="'theme-' + currentTheme" @click="menuClosed = true">
+          Играть
         </button>
+        <button :class="'theme-' + currentTheme" @click="rulesOpen = true">
+          Правила
+        </button>
+        <transition name="fade">
+          <div class="menu" :class="'theme-' + currentTheme" v-if="rulesOpen">
+            <h1>Правила игры</h1>
+            <p>
+              Существует поле 5х5, на котором появляются плитки с величинами,
+              выглядящие по-разному (величина, обозначение, предмет,
+              ассоцииоранный с этой величиной). <br />
+              Соединяя эти плитки, можно получить новую плитку, которая является
+              новой величиной или её частью. <br />
+              При нажатии стрелок на клавиатуре или кнопок управления на экране,
+              <br />
+              происходит сдвиг всех плиток в выбранную сторону и все возможные
+              соединения выполняются. <br />
+              После каждого сдвига появляется новая случайная величина, которая
+              будет подсвечена красным. <br />
+              Существует возможность откатить на одну позицию назад кнопкой
+              "Отменить ход". <br />
+            </p>
+            <button :class="'theme-' + currentTheme" @click="rulesOpen = false">
+              Назад
+            </button>
+          </div>
+        </transition>
+        <button :class="'theme-' + currentTheme" @click="settingsOpen = true">
+          Настройки
+        </button>
+        <transition name="fade">
+          <div
+            class="menu"
+            :class="'theme-' + currentTheme"
+            v-if="settingsOpen"
+          >
+            <h1>Настройки</h1>
+            <!-- <label> Цвет 1: <input type="color" @change="onColor1Changed"> </label>
+            <label> Фон: <input type="color" @change="onBgColorChanged"> </label> -->
+            <select :class="'theme-' + currentTheme" @change="onThemeChanged">
+              <!-- <option value="default">Обычная</option>
+              <option value="night">Ночная</option> -->
+              <option
+                :value="theme.value"
+                v-for="theme in themeList"
+                :key="theme.name"
+                :selected="currentTheme === theme.value ? 'selected' : null"
+              >
+                {{ theme.name }}
+              </option>
+            </select>
+            <button
+              :class="'theme-' + currentTheme"
+              @click="settingsOpen = false"
+            >
+              Назад
+            </button>
+          </div>
+        </transition>
       </div>
+    </transition>
+    <div class="container controls">
+      <button :class="'theme-' + currentTheme" @click="reset">
+        Начать заново
+      </button>
+      <button
+        :class="'theme-' + currentTheme"
+        @click="undo"
+        :disabled="undoUsed"
+      >
+        Отменить ход
+      </button>
+      <button :class="'theme-' + currentTheme" @click="menuClosed = false">
+        Меню
+      </button>
     </div>
-    <div class="container">
-      <button @click="reset">Начать заново</button>
-      <button @click="undo" :disabled="undoUsed">Отменить ход</button>
-    </div>
-    <!-- <p>Используйте стрелки клавиатуры или кнопки ниже для управления.</p> -->
     <div class="container">
       <table>
         <tr>
           <td></td>
-          <td><button @click="move('up')">▲</button></td>
+          <td>
+            <button :class="'theme-' + currentTheme" @click="move('up')">
+              ▲
+            </button>
+          </td>
           <td></td>
         </tr>
         <tr>
-          <td><button @click="move('left')">◀</button></td>
+          <td>
+            <button :class="'theme-' + currentTheme" @click="move('left')">
+              ◀
+            </button>
+          </td>
           <td></td>
-          <td><button @click="move('right')">▶</button></td>
+          <td>
+            <button :class="'theme-' + currentTheme" @click="move('right')">
+              ▶
+            </button>
+          </td>
         </tr>
         <tr>
           <td></td>
-          <td><button @click="move('down')">▼</button></td>
+          <td>
+            <button :class="'theme-' + currentTheme" @click="move('down')">
+              ▼
+            </button>
+          </td>
           <td></td>
         </tr>
       </table>
@@ -65,6 +140,7 @@
 import data from "./data";
 import images from "./images";
 import Tile from "./components/Tile";
+import themes from "./themes";
 
 export default {
   name: "App",
@@ -76,15 +152,22 @@ export default {
       knownTiles: [],
       lastCreatedTile: null,
       score: 0,
-      rulesRead: false,
-      ctx: null
+      ctx: null,
+
+      // Menu bools
+      menuClosed: false,
+      rulesOpen: false,
+      settingsOpen: false,
+
+      // Customisation
+      currentTheme: "default",
     };
   },
   beforeMount() {
     var grid = [];
     for (let x = 0; x < 4; x++) {
       var row = [];
-      for (let y = 0; y < 4; y++) { 
+      for (let y = 0; y < 4; y++) {
         row.push(new Tile("", ""));
       }
       grid.push(row);
@@ -121,7 +204,22 @@ export default {
   computed: {
     gameOver() {
       return this.isGameOver();
-    }
+    },
+
+    themes() {
+      return themes;
+    },
+
+    themeList() {
+      var list = [];
+      for (var theme in themes) {
+        list.push({
+          name: themes[theme].name,
+          value: theme,
+        });
+      }
+      return list;
+    },
   },
   methods: {
     newGrid() {
@@ -147,14 +245,13 @@ export default {
         }
       }
       var index = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
-      var number = this.knownTiles[
-        Math.random() * 1 > 0.9 ? 1 : 0
-      ];
+      var number = this.knownTiles[Math.random() * 1 > 0.9 ? 1 : 0];
       arr[index[0]][index[1]].value = number;
       arr[index[0]][index[1]].isNewTile = true;
       var display = data.appearance.display[number];
       if (display) {
-        arr[index[0]][index[1]].display = display[Math.round(Math.random() * (display.length - 1))];
+        arr[index[0]][index[1]].display =
+          display[Math.round(Math.random() * (display.length - 1))];
       } else {
         arr[index[0]][index[1]].display = number;
       }
@@ -170,7 +267,7 @@ export default {
         }
       });
       var zeroes = [];
-      for (var i = 0; i < (4 - arr.length); i++) {
+      for (var i = 0; i < 4 - arr.length; i++) {
         zeroes[i] = new Tile("", "");
       }
       arr = zeroes.concat(arr);
@@ -191,7 +288,9 @@ export default {
         if (result !== undefined) {
           var appearance = data.appearance.display[result];
           arr[i].value = result;
-          if (appearance !== undefined) arr[i].display = appearance[Math.floor(Math.random() * appearance.length)];
+          if (appearance !== undefined)
+            arr[i].display =
+              appearance[Math.floor(Math.random() * appearance.length)];
           else arr[i].display = result;
           arr[i - 1].value = "";
           arr[i - 1].display = "";
@@ -199,7 +298,10 @@ export default {
             this.knownTiles.push(result);
             this.lastCreatedTile = data.appearance.display[result][0];
           }
-          var scoreEarned = Math.pow(2, this.knownTiles.findIndex(val => val === result) + 1);
+          var scoreEarned = Math.pow(
+            2,
+            this.knownTiles.findIndex((val) => val === result) + 1
+          );
           this.score += scoreEarned;
         }
       }
@@ -272,8 +374,7 @@ export default {
           if (grid[i][j].isNewTile === true) {
             c.strokeStyle = "red";
             c.lineWidth = 6;
-          }
-          else {
+          } else {
             c.strokeStyle = "black";
             c.lineWidth = 2;
             c.filter = "";
@@ -314,11 +415,12 @@ export default {
           } else if (grid[i][j].display.search("img") !== -1) {
             bgColor = data.appearance.color[grid[i][j].value];
             c.fillStyle = bgColor !== undefined ? bgColor : "black";
-            c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5); 
+            c.fillRect(j * rectW + 5, i * rectH + 5, rectW - 5, rectH - 5);
             var args = grid[i][j].display.split(" ");
             var image = new Image();
-            image.onload = function() {
-              if (data.appearance.fontColor[grid[i][j].value] !== "black") c.filter = "invert(1)";
+            image.onload = function () {
+              if (data.appearance.fontColor[grid[i][j].value] !== "black")
+                c.filter = "invert(1)";
               c.drawImage(this, j * rectW + 5, i * rectH + 5);
               c.filter = "invert(0)";
             };
@@ -437,7 +539,11 @@ export default {
       this.previousGrid = [];
       this.updateCanvas();
       this.undoUsed = true;
-    }
+    },
+
+    onThemeChanged(e) {
+      this.currentTheme = e.target.value;
+    },
   },
 
   mounted() {
@@ -447,11 +553,14 @@ export default {
 </script>
 
 <style>
+@import url(./themes/default.css);
+@import url(./themes/night.css);
+
 body {
   margin: 0;
 }
 
-div.rules {
+div.menu {
   position: absolute;
   background: white;
   width: 100%;
@@ -459,13 +568,18 @@ div.rules {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  z-index: 10;
 }
 
-div.rules .container {
-  display: block;
+div.menu button {
+  padding: 5px;
+  width: fit-content;
+  margin: 5px;
 }
 
-p {
+p,
+h1 {
   margin: 5px 0;
 }
 
@@ -503,7 +617,6 @@ div.value p {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
   display: flex;
   flex-direction: column;
   justify-items: center;
@@ -512,10 +625,20 @@ div.value p {
   margin: 0;
 }
 
+h1 {
+  font-family: Avenir, Helvetica, Arial, sans-serif-serif;
+  font-size: 50px;
+  font-weight: normal;
+}
+
 div.container {
   display: flex;
   flex-direction: row;
   justify-content: center;
+}
+
+div.container.vertical {
+  flex-direction: column !important;
 }
 
 div.container.gameOver {
@@ -526,27 +649,45 @@ div.container.gameOver {
   background: rgba(255, 255, 255, 0.95);
 }
 
-table button {
-  width: 75px;
-  height: 75px;
-  font-size: 50px;
+button, select {
+  padding: 5px;
+  margin: 2.5px;
   border: 1px solid black;
   outline: none;
-  border-radius: 10px;
+  font-size: 15px;
+  border-radius: 5px;
   background: rgb(220, 220, 220);
   color: rgb(50, 50, 50);
-  transition-duration: .1s;
+  transition-duration: 0.1s;
   transition-property: all;
   user-select: none;
 }
 
-table button:hover {
-  background: rgb(240, 240, 240)
-}
-
-table button:active {
+button:active {
   background: rgb(100, 100, 100);
   color: white;
-  transform: scale(0.95)
+  transform: scale(0.95);
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+table button {
+  width: 75px;
+  height: 75px;
+  border-radius: 10px;
+  font-size: 50px;
+  margin: 0px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

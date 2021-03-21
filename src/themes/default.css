@@ -1,0 +1,14 @@
+button.theme-default, select.theme-default {
+  background: rgb(220, 220, 220);
+  color: rgb(50, 50, 50)
+}
+
+button.theme-default:active {
+  background: rgb(100, 100, 100);
+  color: white;
+}
+
+div.menu.theme-default {
+  background: white;
+  color: black;
+}
