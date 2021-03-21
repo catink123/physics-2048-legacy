@@ -571,7 +571,12 @@ export default {
   },
 
   created() {
-    this.currentTheme = localStorage.getItem("theme");
+    let savedTheme = localStorage.getItem("theme");
+    if (savedTheme !== null) {
+      this.currentTheme = localStorage.getItem("theme");
+    } else {
+      this.currentTheme = 'default';
+    }
   }
 };
 </script>
