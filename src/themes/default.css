@@ -12,3 +12,7 @@ div.menu.theme-default {
   background: white;
   color: black;
 }
+
+canvas.theme-default, p.theme-default {
+  background: rgba(255, 255, 255, 0.5)
+}

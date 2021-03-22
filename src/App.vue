@@ -1,14 +1,14 @@
 <template>
-  <div :class="'theme-' + currentTheme" id="app">
+  <div :class="'theme-' + currentTheme" id="app" :style=" currentBG !== null ? 'background: url(' + bgs[currentBG].image + ')': null">
     <div class="container">
-      <p>Очки: {{ score }}</p>
+      <p :class="'theme-' + currentTheme">Очки: {{ score }}</p>
 
-      <p v-if="lastCreatedTile !== null" style="margin-left: 5px">
+      <p :class="'theme-' + currentTheme" v-if="lastCreatedTile !== null">
         Последняя новая плитка: {{ lastCreatedTile }}
       </p>
     </div>
     <div class="container">
-      <canvas id="c" width="305" height="305" />
+      <canvas :class="'theme-' + currentTheme" id="c" width="305" height="305" />
 
       <transition name="fade">
         <div class="container gameOver" v-if="gameOver">
@@ -61,7 +61,7 @@
             <h1>Настройки</h1>
             <!-- <label> Цвет 1: <input type="color" @change="onColor1Changed"> </label>
             <label> Фон: <input type="color" @change="onBgColorChanged"> </label> -->
-            <select :class="'theme-' + currentTheme" @change="onThemeChanged">
+            <label>Тема: <select :class="'theme-' + currentTheme" @change="onThemeChanged">
               <!-- <option value="default">Обычная</option>
               <option value="night">Ночная</option> -->
               <option
@@ -72,7 +72,20 @@
               >
                 {{ theme.name }}
               </option>
+            </select></label>
+            <label>Фон: <select :class="'theme-' + currentTheme" @change="onBGChanged">
+              <!-- <option value="default">Обычная</option>
+              <option value="night">Ночная</option> -->
+              <option
+                :value="bg.value"
+                v-for="bg in bgList"
+                :key="bg.name"
+                :selected="currentBG === bg.value ? 'selected' : null"
+              >
+                {{ bg.name }}
+              </option>
             </select>
+            </label>
             <button
               :class="'theme-' + currentTheme"
               @click="settingsOpen = false"
@@ -141,6 +154,7 @@ import data from "./data";
 import images from "./images";
 import Tile from "./components/Tile";
 import themes from "./themes";
+import bgs from './bgs';
 
 export default {
   name: "App",
@@ -161,6 +175,7 @@ export default {
 
       // Customisation
       currentTheme: "default",
+      currentBG: null
     };
   },
   beforeMount() {
@@ -220,6 +235,21 @@ export default {
       }
       return list;
     },
+
+    bgs() {
+      return bgs
+    },
+
+    bgList() {
+      var list = [];
+      for (var bg in bgs) {
+        list.push({
+          name: bgs[bg].name,
+          value: bg,
+        });
+      }
+      return list;
+    }
   },
   methods: {
     newGrid() {
@@ -564,6 +594,11 @@ export default {
       localStorage.setItem("theme", e.target.value);
       this.updateCanvas();
     },
+
+    onBGChanged(e) {
+      this.currentBG = e.target.value;
+      localStorage.setItem("bg", e.target.value);
+    }
   },
 
   mounted() {
@@ -572,11 +607,13 @@ export default {
 
   created() {
     let savedTheme = localStorage.getItem("theme");
+    let savedBG = localStorage.getItem("bg");
     if (savedTheme !== null) {
-      this.currentTheme = localStorage.getItem("theme");
+      this.currentTheme = savedTheme;
     } else {
       this.currentTheme = 'default';
     }
+    this.currentBG = savedBG;
   }
 };
 </script>
@@ -609,7 +646,8 @@ div.menu button {
 
 p,
 h1 {
-  margin: 5px 0;
+  padding: 5px;
+  margin: 2px;
 }
 
 div.grid {
@@ -652,6 +690,8 @@ div.value p {
   justify-content: center;
   height: 100vh;
   margin: 0;
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 h1 {
@@ -719,5 +759,13 @@ table button {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+canvas, p {
+  border-radius: 2px;
+}
+
+div.menu p {
+  background: none;
 }
 </style>
