@@ -17,3 +17,7 @@ div.menu.theme-night, #app.theme-night {
 canvas.theme-night, p.theme-night {
   background: rgba(0, 0, 0, 0.5)
 }
+
+div.container.gameOver.theme-night {
+  background: rgb(25, 25, 25);
+}

@@ -1,5 +1,13 @@
 <template>
-  <div :class="'theme-' + currentTheme" id="app" :style=" currentBG !== null ? 'background: url(' + bgs[currentBG].image + ')': null">
+  <div
+    :class="'theme-' + currentTheme"
+    id="app"
+    :style="
+      currentBG !== null
+        ? 'background: url(' + bgs[currentBG].image + ')'
+        : null
+    "
+  >
     <div class="container">
       <p :class="'theme-' + currentTheme">Очки: {{ score }}</p>
 
@@ -8,10 +16,19 @@
       </p>
     </div>
     <div class="container">
-      <canvas :class="'theme-' + currentTheme" id="c" width="305" height="305" />
+      <canvas
+        :class="'theme-' + currentTheme"
+        id="c"
+        width="305"
+        height="305"
+      />
 
       <transition name="fade">
-        <div class="container gameOver" v-if="gameOver">
+        <div
+          :class="'theme-' + currentTheme"
+          class="container gameOver"
+          v-if="gameOver"
+        >
           <p>Игра окончена!</p>
         </div>
       </transition>
@@ -30,12 +47,13 @@
           <div class="menu" :class="'theme-' + currentTheme" v-if="rulesOpen">
             <h1>Правила игры</h1>
             <p>
-              Существует поле 5х5, на котором появляются плитки с величинами,
+              Существует поле 4х4, на котором появляются плитки с величинами,
               выглядящие по-разному (величина, обозначение, предмет,
               ассоцииоранный с этой величиной). <br />
               Соединяя эти плитки, можно получить новую плитку, которая является
-              новой величиной или её частью. <br />
-              При нажатии стрелок на клавиатуре или кнопок управления на экране,
+              новой величиной. <br />
+              При нажатии стрелок на клавиатуре, кнопок управления на экране (по
+              умолчанию отключены, включаются в настройках) или свайпов по полю,
               <br />
               происходит сдвиг всех плиток в выбранную сторону и все возможные
               соединения выполняются. <br />
@@ -61,31 +79,43 @@
             <h1>Настройки</h1>
             <!-- <label> Цвет 1: <input type="color" @change="onColor1Changed"> </label>
             <label> Фон: <input type="color" @change="onBgColorChanged"> </label> -->
-            <label>Тема: <select :class="'theme-' + currentTheme" @change="onThemeChanged">
-              <!-- <option value="default">Обычная</option>
+            <label
+              >Тема:
+              <select :class="'theme-' + currentTheme" @change="onThemeChanged">
+                <!-- <option value="default">Обычная</option>
               <option value="night">Ночная</option> -->
-              <option
-                :value="theme.value"
-                v-for="theme in themeList"
-                :key="theme.name"
-                :selected="currentTheme === theme.value ? 'selected' : null"
-              >
-                {{ theme.name }}
-              </option>
-            </select></label>
-            <label>Фон: <select :class="'theme-' + currentTheme" @change="onBGChanged">
-              <!-- <option value="default">Обычная</option>
+                <option
+                  :value="theme.value"
+                  v-for="theme in themeList"
+                  :key="theme.name"
+                  :selected="currentTheme === theme.value ? 'selected' : null"
+                >
+                  {{ theme.name }}
+                </option>
+              </select></label
+            >
+            <label
+              >Фон:
+              <select :class="'theme-' + currentTheme" @change="onBGChanged">
+                <!-- <option value="default">Обычная</option>
               <option value="night">Ночная</option> -->
-              <option
-                :value="bg.value"
-                v-for="bg in bgList"
-                :key="bg.name"
-                :selected="currentBG === bg.value ? 'selected' : null"
-              >
-                {{ bg.name }}
-              </option>
-            </select>
+                <option
+                  :value="bg.value"
+                  v-for="bg in bgList"
+                  :key="bg.name"
+                  :selected="currentBG === bg.value ? 'selected' : null"
+                >
+                  {{ bg.name }}
+                </option>
+              </select>
             </label>
+            <label
+              >Кнопки управления:
+              <input
+                type="checkbox"
+                @change="onCtrlsShownChanged"
+                :checked="controlsShown"
+            /></label>
             <button
               :class="'theme-' + currentTheme"
               @click="settingsOpen = false"
@@ -111,7 +141,7 @@
         Меню
       </button>
     </div>
-    <div class="container">
+    <div class="container" v-if="controlsShown">
       <table>
         <tr>
           <td></td>
@@ -146,15 +176,34 @@
         </tr>
       </table>
     </div>
+    <div class="authbox">
+      <button :class="'theme-' + currentTheme" :disabled="loginPending" @click="login" v-if="!loggedIn">
+        Войти
+      </button>
+      <div v-else>
+        <button
+          :class="'theme-' + currentTheme"
+          @click="logout"
+        >
+          Выйти
+        </button>
+        <p>{{ displayName }}</p>
+        <img :src="photo" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import SwipeListener from "swipe-listener";
+import firebase from "firebase/app";
+import "firebase/auth";
+
 import data from "./data";
 import images from "./images";
 import Tile from "./components/Tile";
 import themes from "./themes";
-import bgs from './bgs';
+import bgs from "./bgs";
 
 export default {
   name: "App",
@@ -175,7 +224,17 @@ export default {
 
       // Customisation
       currentTheme: "default",
-      currentBG: null
+      currentBG: null,
+      controlsShown: false,
+
+      // Auth
+      loggedIn: false,
+      loginPending: true,
+      displayName: "",
+      photo: "",
+
+      // Debug
+      devFail: false,
     };
   },
   beforeMount() {
@@ -210,6 +269,10 @@ export default {
           e.preventDefault();
           this.move("down");
           break;
+        case "F1":
+          e.preventDefault();
+          this.devFail = !this.devFail;
+          break;
 
         default:
           break;
@@ -218,7 +281,7 @@ export default {
   },
   computed: {
     gameOver() {
-      return this.isGameOver();
+      return this.devFail ? true : this.isGameOver();
     },
 
     themes() {
@@ -237,7 +300,7 @@ export default {
     },
 
     bgs() {
-      return bgs
+      return bgs;
     },
 
     bgList() {
@@ -249,7 +312,7 @@ export default {
         });
       }
       return list;
-    }
+    },
   },
   methods: {
     newGrid() {
@@ -423,7 +486,10 @@ export default {
           let tileTheme;
           let bgColor;
           let fontColor;
-          if (theme.tiles !== undefined && theme.tiles[grid[i][j].value] !== undefined) {
+          if (
+            theme.tiles !== undefined &&
+            theme.tiles[grid[i][j].value] !== undefined
+          ) {
             tileTheme = theme.tiles[grid[i][j].value];
             if (tileTheme.font !== undefined) fontColor = tileTheme.font;
             else fontColor = data.appearance.fontColor[grid[i][j].value];
@@ -476,19 +542,6 @@ export default {
           }
         }
       }
-      /* if (this.isGameOver()) {
-        c.fillStyle = "rgba(255, 255, 255, 0.75)";
-        c.fillRect(0, 0, canv.width, canv.height)
-        c.textAlign = "center";
-        c.textBaseline = "middle";
-        c.fillStyle = "black";
-        c.fillText(
-          "Игра окончена!",
-          canv.width / 2,
-          canv.height / 2
-        );
-      } */
-      // requestAnimationFrame(this.updateCanvas)
     },
 
     isGameOver() {
@@ -506,14 +559,6 @@ export default {
           if (j !== 3 && grid[i][j].value === grid[i][j + 1].value) {
             return false;
           }
-
-          /* if (i !== 3 && data.combinations[`${grid[i][j]} ${grid[i + 1][j]}`]) {
-            return false;
-          }
-
-          if (j !== 3 && grid[i][j] === grid[i][j + 1]) {
-            return false;
-          } */
         }
       }
       return true;
@@ -598,23 +643,101 @@ export default {
     onBGChanged(e) {
       this.currentBG = e.target.value;
       localStorage.setItem("bg", e.target.value);
-    }
+    },
+
+    onCtrlsShownChanged(e) {
+      this.controlsShown = e.target.checked;
+      localStorage.setItem("controlsShown", e.target.checked);
+    },
+
+    login() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+      firebase.auth().languageCode = "ru";
+      firebase
+        .auth()
+        .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .then(() => {
+          return firebase
+            .auth()
+            .signInWithPopup(provider)
+            .then((result) => {
+              var credential = result.credential;
+
+              var token = credential.accessToken;
+              console.log(token);
+              var user = result.user;
+              console.log(user);
+              this.displayName = user.displayName;
+              this.photo = user.photoURL;
+              this.loggedIn = true;
+            })
+            .catch((error) => {
+              // Handle Errors here.
+              // var errorCode = error.code;
+              // var errorMessage = error.message;
+              console.error(error.message);
+              // The email of the user's account used.
+              // var email = error.email;
+              // The firebase.auth.AuthCredential type that was used.
+              // var credential = error.credential;
+              // ...
+            });
+        });
+    },
+
+    logout() {
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          this.loggedIn = false;
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
+    },
   },
 
   mounted() {
     this.updateCanvas();
+
+    var canv = document.querySelector("canvas");
+    SwipeListener(canv);
+    canv.addEventListener("swipe", (e) => {
+      e.preventDefault();
+      var dirs = e.detail.directions;
+
+      if (dirs.left) this.move("left");
+      if (dirs.right) this.move("right");
+      if (dirs.top) this.move("up");
+      if (dirs.bottom) this.move("down");
+    });
+    canv.addEventListener("touchstart", (e) => e.preventDefault());
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.loginPending = false;
+        this.loggedIn = true;
+        this.displayName = user.displayName;
+        this.photo = user.photoURL;
+      } else {
+        this.loginPending = false;
+      }
+    })
   },
 
   created() {
     let savedTheme = localStorage.getItem("theme");
     let savedBG = localStorage.getItem("bg");
+    let ctrlsShown = localStorage.getItem("controlsShown");
     if (savedTheme !== null) {
       this.currentTheme = savedTheme;
-    } else {
-      this.currentTheme = 'default';
     }
     this.currentBG = savedBG;
-  }
+    if (ctrlsShown !== null) {
+      this.controlsShown = ctrlsShown;
+    }
+  },
 };
 </script>
 
@@ -716,6 +839,7 @@ div.container.gameOver {
   position: absolute;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.95);
+  border-radius: 2px;
 }
 
 button,
@@ -761,11 +885,29 @@ table button {
   opacity: 0;
 }
 
-canvas, p {
+canvas,
+p {
   border-radius: 2px;
 }
 
 div.menu p {
   background: none;
+}
+
+div.authbox {
+  position: fixed;
+  top: 0;
+  right: 0;
+  margin: 10px;
+  z-index: 12;
+}
+
+div.authbox > div {
+  display: flex;
+}
+
+div.authbox > div img {
+  width: 32px;
+  border-radius: 5px;
 }
 </style>
