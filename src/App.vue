@@ -660,9 +660,6 @@ export default {
       }
 
       this.updateCanvas();
-
-      let gameOver = this.isGameOver();
-      if (gameOver) console.log("GAME OVER");
     },
 
     reset() {
@@ -714,9 +711,7 @@ export default {
               var credential = result.credential;
 
               var token = credential.accessToken;
-              console.log(token);
               var user = result.user;
-              console.log(user);
               this.displayName = user.displayName;
               this.photo = user.photoURL;
               this.userID = user.uid;
