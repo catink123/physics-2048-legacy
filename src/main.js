@@ -12,7 +12,8 @@ var firebaseConfig = {
   storageBucket: "physics-2048.appspot.com",
   messagingSenderId: "526814158756",
   appId: "1:526814158756:web:df7f08432d9da85120ab31",
-  measurementId: "G-LSD6TN3RNP"
+  measurementId: "G-LSD6TN3RNP",
+  databaseURL: "https://physics-2048-default-rtdb.europe-west1.firebasedatabase.app"
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);

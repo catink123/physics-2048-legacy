@@ -30,6 +30,7 @@
           v-if="gameOver"
         >
           <p>Игра окончена!</p>
+          <button :class="'theme-' + currentTheme" @click="writeHighscore" :disabled="!loggedIn || scoreSent">Отправить счёт</button>
         </div>
       </transition>
     </div>
@@ -61,6 +62,7 @@
               будет подсвечена красным. <br />
               Существует возможность откатить на одну позицию назад кнопкой
               "Отменить ход". <br />
+              Для использования функций таблицы рекордов необходимо сделать вход кнопкой в углу экрана.
             </p>
             <button :class="'theme-' + currentTheme" @click="rulesOpen = false">
               Назад
@@ -119,6 +121,38 @@
             <button
               :class="'theme-' + currentTheme"
               @click="settingsOpen = false"
+            >
+              Назад
+            </button>
+          </div>
+        </transition>
+        <button
+          :class="'theme-' + currentTheme"
+          @click="openHighscores"
+          :disabled="highScoresPending || !loggedIn"
+        >
+          Таблица рекордов
+        </button>
+        <transition name="fade">
+          <div
+            class="menu"
+            :class="'theme-' + currentTheme"
+            v-if="highScoresOpen"
+          >
+            <h1>Таблица рекордов</h1>
+            <table class="highScores" :class="'theme-' + currentTheme">
+              <tr>
+                <th>Имя</th>
+                <th>Счёт</th>
+              </tr>
+              <tr v-for="entry in highScores" :key="entry.name">
+                <th>{{ entry.name }}</th>
+                <th>{{ entry.score }}</th>
+              </tr>
+            </table>
+            <button
+              :class="'theme-' + currentTheme"
+              @click="highScoresOpen = false"
             >
               Назад
             </button>
@@ -198,6 +232,7 @@
 import SwipeListener from "swipe-listener";
 import firebase from "firebase/app";
 import "firebase/auth";
+import "firebase/database";
 
 import data from "./data";
 import images from "./images";
@@ -216,11 +251,15 @@ export default {
       lastCreatedTile: null,
       score: 0,
       ctx: null,
+      scoreSent: false,
 
       // Menu bools
       menuClosed: false,
       rulesOpen: false,
       settingsOpen: false,
+      highScoresOpen: false,
+      highScoresPending: false,
+      highScores: null,
 
       // Customisation
       currentTheme: "default",
@@ -232,6 +271,7 @@ export default {
       loginPending: true,
       displayName: "",
       photo: "",
+      userID: null,
 
       // Debug
       devFail: false,
@@ -272,6 +312,14 @@ export default {
         case "F1":
           e.preventDefault();
           this.devFail = !this.devFail;
+          break;
+        case "F2":
+          e.preventDefault();
+          this.readHighscores();
+          break;
+        case "F3":
+          e.preventDefault();
+          this.writeHighscore();
           break;
 
         default:
@@ -622,6 +670,7 @@ export default {
       this.lastCreatedTile = null;
       this.knownTiles = data.startingTiles;
       this.score = 0;
+      this.scoreSent = false;
       this.putRandomNumber();
       this.putRandomNumber();
       this.updateCanvas();
@@ -670,18 +719,11 @@ export default {
               console.log(user);
               this.displayName = user.displayName;
               this.photo = user.photoURL;
+              this.userID = user.uid;
               this.loggedIn = true;
             })
             .catch((error) => {
-              // Handle Errors here.
-              // var errorCode = error.code;
-              // var errorMessage = error.message;
               console.error(error.message);
-              // The email of the user's account used.
-              // var email = error.email;
-              // The firebase.auth.AuthCredential type that was used.
-              // var credential = error.credential;
-              // ...
             });
         });
     },
@@ -697,6 +739,29 @@ export default {
           console.error(error.message);
         });
     },
+
+    writeHighscore() {
+      firebase.database().ref('highscores/' + this.userID).set({
+        name: this.displayName,
+        score: this.score
+      }).then(() => {
+        this.scoreSent = true;
+      });
+    },
+
+    readHighscores() {
+      return firebase.database().ref('highscores').get().then(snapshot => {
+        this.highScores = snapshot.val();
+      });
+    },
+
+    openHighscores() {
+      this.highScoresPending = true;
+      this.readHighscores().then(() => {
+        this.highScoresOpen = true;
+        this.highScoresPending = false;
+      })
+    }
   },
 
   mounted() {
@@ -720,6 +785,7 @@ export default {
         this.loggedIn = true;
         this.displayName = user.displayName;
         this.photo = user.photoURL;
+        this.userID = user.uid;
       } else {
         this.loginPending = false;
       }
@@ -751,9 +817,11 @@ body {
 
 div.menu {
   position: absolute;
+  left: 0;
+  top: 0;
   background: white;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -840,6 +908,11 @@ div.container.gameOver {
   flex-direction: column;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 2px;
+  align-items: center;
+}
+
+div.container.gameOver button {
+  width: fit-content;
 }
 
 button,
@@ -909,5 +982,20 @@ div.authbox > div {
 div.authbox > div img {
   width: 32px;
   border-radius: 5px;
+}
+
+table.highScores {
+  text-align: left;
+  border-collapse: collapse;
+  min-width: 250px;
+  margin: 10px;
+}
+
+table.highScores th {
+  border: 2px solid rgb(50, 50, 50);
+}
+
+table.highScores th {
+  padding: 5px;
 }
 </style>

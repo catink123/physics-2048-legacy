@@ -19,5 +19,9 @@ canvas.theme-night, p.theme-night {
 }
 
 div.container.gameOver.theme-night {
-  background: rgb(25, 25, 25);
+  background: rgba(25, 25, 25, 0.75);
+}
+
+table.highScores.theme-night th {
+  border-color: white;
 }
