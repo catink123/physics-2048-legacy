@@ -708,9 +708,6 @@ export default {
             .auth()
             .signInWithPopup(provider)
             .then((result) => {
-              var credential = result.credential;
-
-              var token = credential.accessToken;
               var user = result.user;
               this.displayName = user.displayName;
               this.photo = user.photoURL;
