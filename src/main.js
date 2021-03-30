@@ -1,9 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import firebase from 'firebase/app';
-import { firestorePlugin } from 'vuefire'
-
-Vue.use(firestorePlugin)
+import 'firebase/analytics';
 
 var firebaseConfig = {
   apiKey: "AIzaSyDXjjpDKxVEKxF1YbE2Bc7OvOYEYb6AHJc",
@@ -17,6 +15,7 @@ var firebaseConfig = {
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+firebase.analytics();
 
 Vue.config.productionTip = false
 

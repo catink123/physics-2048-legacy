@@ -704,6 +704,7 @@ export default {
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
+          firebase.analytics().logEvent("login")
           return firebase
             .auth()
             .signInWithPopup(provider)
@@ -739,6 +740,7 @@ export default {
       }).then(() => {
         this.scoreSent = true;
       });
+      firebase.analytics().logEvent("highscore_sent", {score: this.score});
     },
 
     readHighscores() {
